@@ -7,8 +7,6 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,42 +19,25 @@ import com.batch.writer.MongoTaxWriter;
 @Configuration
 @EnableBatchProcessing
 public class TaxJob {
-
-	@Autowired
-	private JobBuilderFactory jobBuilderFactory;
-
-	@Autowired
-	private StepBuilderFactory stepBuilderFactory;
-
-	@Autowired
-	private JobListener jobListener;
 	
-	@Autowired
-	private CSVtaxReader csvTaxReader;
-
-	@Autowired
-	private MongoTaxWriter taxWriter;
-	
-	@Autowired
-	@Qualifier(value="taxVOtoTaxConverterProcessor")
-	private ItemProcessor< TaxVO, Tax> taxVOtoTaxConverterProcessor;
-
 	   @Bean
-	    public Job jobTax() {
+	    public Job jobTax(JobBuilderFactory jobBuilderFactory, JobListener jobListener, 
+	    		StepBuilderFactory stepBuilderFactory, CSVtaxReader csvTaxReader, MongoTaxWriter taxWriter,
+	    		ItemProcessor< TaxVO, Tax> taxVOtoTaxConverterProcessor) {
 	        return jobBuilderFactory
 	                .get("jobTax")
 	                .listener(jobListener)
 	                .incrementer(new RunIdIncrementer())
-	                .start(step1())
+	                .start(step1(stepBuilderFactory,csvTaxReader,taxWriter,taxVOtoTaxConverterProcessor))
 	                .build();
 	    }
 	 
 	    @Bean
-	    public Step step1() {
+	    public Step step1(StepBuilderFactory stepBuilderFactory, CSVtaxReader csvTaxReader, MongoTaxWriter taxWriter,
+	    		ItemProcessor< TaxVO, Tax> taxVOtoTaxConverterProcessor	) {
 	        return stepBuilderFactory
 	                .get("step1")
-	                .listener(null)
-	                .<TaxVO,Tax>chunk(3)
+	                .<TaxVO,Tax>chunk(10)
 	                .reader(csvTaxReader)
 	                .processor(taxVOtoTaxConverterProcessor)
 	                .writer(taxWriter)

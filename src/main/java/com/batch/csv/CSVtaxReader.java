@@ -15,22 +15,26 @@ import com.batch.vo.TaxVO;
 public class CSVtaxReader extends FlatFileItemReader<TaxVO> {
 
 	public CSVtaxReader() {
-		setResource(new ClassPathResource(""));
+		setResource(new ClassPathResource("taxs.csv"));
 		setLinesToSkip(1);
 		setLineMapper(lineMapper());
 	}
 
 	@Bean
 	public LineMapper<TaxVO> lineMapper() {
-		DefaultLineMapper<TaxVO> lineMapper = new DefaultLineMapper<TaxVO>();
+		DefaultLineMapper<TaxVO> lineMapper = new DefaultLineMapper<>();
 		DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer();
-		lineTokenizer.setNames(new String[] { "tipoConta", "dataVencimento", "valor", "valorConsumo", "nomeCliente" });
-		lineTokenizer.setIncludedFields(new int[] { 0, 1, 2, 3, 4 });
-		BeanWrapperFieldSetMapper<TaxVO> fieldSetMapper = new BeanWrapperFieldSetMapper<TaxVO>();
+		lineTokenizer.setDelimiter(";");
+		lineTokenizer.setNames(columnNames());
+		BeanWrapperFieldSetMapper<TaxVO> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
 		fieldSetMapper.setTargetType(TaxVO.class);
 		lineMapper.setLineTokenizer(lineTokenizer);
 		lineMapper.setFieldSetMapper(fieldSetMapper);
 		return lineMapper;
 	}
 
+	private String[] columnNames() {
+		return new String[] { "tipoConta", "dataVencimento", "valor","valorConsumo","nomeCliente"};
+	}
+	
 }
